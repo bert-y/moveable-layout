@@ -7,11 +7,17 @@
     "lib",
     "types/*.d.ts"
   ],
+  "main": "lib/moveable-layout.umd.js",
+  "unpkg": "lib/moveable-layout.umd.js",
+  "style": "lib/moveable-layout.css",
+  "publishConfig": {
+    "JackySoft:registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "package": "vue-cli-service build --target lib --name moveable-layout --dest lib packages/index.js",
+    "lib": "vue-cli-service build --target lib --name moveable-layout --dest lib packages/index.js",
     "release:major": "standard-version --release-as major",
     "release:minor": "standard-version --release-as minor",
     "release:patch": "standard-version --release-as patch"
