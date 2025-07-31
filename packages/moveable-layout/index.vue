@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="controls">
-      <button @click="saveLayout">保存布局1</button>
+      <button @click="save">保存布局1</button>
     </div>
     <!-- 座位模板区 -->
     <div class="seat-templates">
@@ -20,6 +20,7 @@
     <div
         class="stage"
         ref="stage"
+        :style="stageStyle"
         @dragover.prevent
         @drop="onStageDrop"
     >
@@ -56,7 +57,7 @@
           :snapDirections="snapDirections"
           :elementSnapDirections="elementSnapDirections"
           :snapThreshold="5"
-          :bounds="{ left: 0, top: 0, right: stageWidth, bottom: stageHeight }"
+          :bounds="{ left: 0, top: 0, right: stageSize.width, bottom: stageSize.height }"
           :edge="false"
           :origin="false"
           :keepRatio="false"
@@ -85,6 +86,20 @@ export default {
       default: () => [
         { name: '普通座位', width: 100, height: 80, color: '#f0ad4e' }
       ]
+    },
+    stageSize: {
+      type: Object,
+      default: () => {
+        return {
+          width: 100,
+          height: 200
+        }
+      },
+      required: true
+    },
+    saveLayout: {
+      type: Function,
+      required: true
     }
   },
   data() {
@@ -95,8 +110,6 @@ export default {
       snapEnabled: true,
       gridSize: 30,
       showGrid: true,
-      stageWidth: 800,
-      stageHeight: 600,
       snapDirections: { top: true, left: true, bottom: true, right: true },
       elementSnapDirections: { top: true, left: true, bottom: true, right: true },
       draggedTemplate: null
@@ -119,6 +132,12 @@ export default {
           linear-gradient(to bottom, #eee 1px, transparent 1px)
         `
       };
+    },
+    stageStyle() {
+      return {
+        width: `${this.stageSize.width}px`,
+        height: `${this.stageSize.height}px`,
+      }
     }
   },
   methods: {
@@ -150,6 +169,11 @@ export default {
       });
 
       this.draggedTemplate = null;
+    },
+
+    init(seats) {
+      this.nextId = seats.reduce((p,v) => p.id < v.id ? v : p).id + 1;
+      this.seats = seats;
     },
 
     // 选中座位
@@ -210,9 +234,11 @@ export default {
       console.log('旋转结束');
     },
 
-    saveLayout() {
+    save() {
       console.log('当前布局:', JSON.stringify(this.seats, null, 2));
-      alert('布局已保存到控制台');
+      // alert('布局已保存到控制台');
+      const res = JSON.stringify(this.seats);
+      this.saveLayout(res);
     }
   }
 };
@@ -288,8 +314,6 @@ export default {
 /* 舞台区 */
 .stage {
   position: relative;
-  width: 800px;
-  height: 600px;
   border: 2px dashed #ccc;
   margin-top: 10px;
   overflow: hidden;
