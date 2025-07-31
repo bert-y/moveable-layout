@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="controls">
-      <button @click="save">保存布局1</button>
+      <button @click="save">保存布局</button>
     </div>
     <!-- 座位模板区 -->
     <div class="seat-templates">
