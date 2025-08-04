@@ -53,9 +53,12 @@
           :resizable="true"
           :rotatable="true"
           :snappable="true"
+          :snapGap="snapGap"
           :snapContainer="snapContainer"
           :snapDirections="snapDirections"
           :elementSnapDirections="elementSnapDirections"
+          :elementGuidelinesAll="false"
+          :elementGuidelines="elementGuidelines"
           :snapThreshold="5"
           :bounds="{ left: 0, top: 0, right: stageSize.width, bottom: stageSize.height }"
           :edge="false"
@@ -100,6 +103,15 @@ export default {
     saveLayout: {
       type: Function,
       required: true
+    },
+    preventOverlap: {
+      type: Boolean,
+      default: true,
+      required: false
+    },
+    dealOverlap: {
+      type: Function,
+      required: false
     }
   },
   data() {
@@ -107,11 +119,13 @@ export default {
       seats: [],
       nextId: 1,
       selectedSeatIndex: null,
+      elementGuidelinesEnabled: true,
       snapEnabled: true,
       gridSize: 30,
       showGrid: true,
-      snapDirections: { top: true, left: true, bottom: true, right: true },
-      elementSnapDirections: { top: true, left: true, bottom: true, right: true },
+      snapGap: true,
+      snapDirections : {"top":true,"left":true,"bottom":true,"right":true,"center":true,"middle":true},
+      elementSnapDirections : {"top":true,"left":true,"bottom":true,"right":true,"center":true,"middle":true},
       draggedTemplate: null
     };
   },
@@ -123,6 +137,10 @@ export default {
       if (this.selectedSeatIndex === null) return [];
       const element = this.$refs.seatElements[this.selectedSeatIndex];
       return element ? [element] : [];
+    },
+    elementGuidelines() {
+      if (!this.elementGuidelinesEnabled) return [];
+      return this.$refs.seatElements?.filter((_, i) => i !== this.selectedSeatIndex) || [];
     },
     gridStyle() {
       return {
@@ -167,8 +185,16 @@ export default {
         color: this.draggedTemplate.color,
         zIndex: 1
       });
-
       this.draggedTemplate = null;
+      const current = this.seats[this.seats.length - 1];
+      const overlap  = this.seats.some((seat, index) => {
+        if (index === this.seats.length - 1) return false;
+        return this.checkRotatedRectOverlap(current, seat);
+      })
+      if(this.preventOverlap && overlap) {
+        this.dealOverlap();
+        this.seats.pop();
+      }
     },
 
     init(seats) {
@@ -176,8 +202,49 @@ export default {
       this.seats = seats;
     },
 
+    // 检查两个旋转后的矩形是否交叉
+    checkRotatedRectOverlap(rect1, rect2) {
+      // 简化的碰撞检测（精确的旋转矩形碰撞检测较复杂，这里使用外接矩形简化）
+      const getBoundingRect = (rect) => {
+        const rad = rect.rotate * Math.PI / 180;
+        const cos = Math.abs(Math.cos(rad));
+        const sin = Math.abs(Math.sin(rad));
+        const width = rect.width * cos + rect.height * sin;
+        const height = rect.width * sin + rect.height * cos;
+        return {
+          x: rect.x - (width - rect.width) / 2,
+          y: rect.y - (height - rect.height) / 2,
+          width,
+          height
+        };
+      };
+
+      const r1 = getBoundingRect(rect1);
+      const r2 = getBoundingRect(rect2);
+
+      return !(
+          r1.x + r1.width <= r2.x ||
+          r1.x >= r2.x + r2.width ||
+          r1.y + r1.height <= r2.y ||
+          r1.y >= r2.y + r2.height
+      );
+    },
+
+    // 检查当前元素是否与其他元素交叉
+    checkCurrentOverlap() {
+      if (this.selectedSeatIndex === null || !this.preventOverlap) return false;
+
+      const current = this.seats[this.selectedSeatIndex];
+
+      return this.seats.some((seat, index) => {
+        if (index === this.selectedSeatIndex) return false;
+        return this.checkRotatedRectOverlap(current, seat);
+      });
+    },
+
     // 选中座位
     selectSeat(index) {
+      console.log(index);
       this.selectedSeatIndex = index;
       this.$nextTick(() => {
         if (this.$refs.moveable) {
@@ -188,7 +255,6 @@ export default {
 
     // 处理拖拽
     handleDrag(e) {
-      // console.log(e);
       e.target.style.transform = e.transform;
     },
 
@@ -219,6 +285,9 @@ export default {
       const seat = this.seats[this.selectedSeatIndex];
       seat.x = e.lastEvent.translate[0];
       seat.y = e.lastEvent.translate[1];
+      if(this.preventOverlap && this.checkCurrentOverlap()) {
+        this.dealOverlap();
+      }
     },
 
     handleResizeEnd(e) {
@@ -228,10 +297,16 @@ export default {
       seat.y = e.lastEvent.drag.beforeTranslate[1];
       seat.width = e.lastEvent.width;
       seat.height = e.lastEvent.height;
+      if(this.preventOverlap && this.checkCurrentOverlap()) {
+        this.dealOverlap();
+      }
     },
 
     handleRotateEnd() {
       console.log('旋转结束');
+      if(this.preventOverlap && this.checkCurrentOverlap()) {
+        this.dealOverlap();
+      }
     },
 
     save() {

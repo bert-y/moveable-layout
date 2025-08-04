@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <div class="layout_content">
-      <MoveableLayout ref="layout" :seat-templates="seat" :stage-size="stageSize" :save-layout="save"></MoveableLayout>
+      <MoveableLayout ref="layout"  :seat-templates="seat"
+                                    :stage-size="stageSize"
+                                    :save-layout="save"
+                                    :deal-overlap="dealOverlap"></MoveableLayout>
     </div>
   </div>
 </template>
@@ -18,8 +21,8 @@ export default {
     return {
       seat:[
           { name: '普通座位', width: 100, height: 80, color: '#f0ad4e' },
-          { name: 'VIP座位', width: 120, height: 100, color: '#428bca' },
-          { name: '轮椅区', width: 150, height: 120, color: '#5cb85c' }
+          { name: 'VIP座位', width: 100, height: 80, color: '#428bca' },
+          { name: '轮椅区', width: 100, height: 80, color: '#5cb85c' }
       ],
       stageSize: {
         width: 600,
@@ -34,43 +37,46 @@ export default {
     save(layout) {
       console.log("save layout res: ",layout);
     },
+    dealOverlap() {
+      alert("座位已经重叠 请重新排布");
+    },
     init() {
-      const para = [
-        {
-          "id": 1,
-          "name": "普通座位",
-          "x": 239,
-          "y": 127,
-          "width": 100,
-          "height": 80,
-          "rotate": 0,
-          "color": "#f0ad4e",
-          "zIndex": 1
-        },
-        {
-          "id": 2,
-          "name": "VIP座位",
-          "x": 240,
-          "y": 210,
-          "width": 120,
-          "height": 100,
-          "rotate": 0,
-          "color": "#428bca",
-          "zIndex": 1
-        },
-        {
-          "id": 3,
-          "name": "轮椅区",
-          "x": 240,
-          "y": 315,
-          "width": 150,
-          "height": 120,
-          "rotate": 0,
-          "color": "#5cb85c",
-          "zIndex": 1
-        }
-      ]
-      this.$refs.layout.init(para);
+      // const para = [
+      //   {
+      //     "id": 1,
+      //     "name": "普通座位",
+      //     "x": 239,
+      //     "y": 127,
+      //     "width": 100,
+      //     "height": 80,
+      //     "rotate": 0,
+      //     "color": "#f0ad4e",
+      //     "zIndex": 1
+      //   },
+      //   {
+      //     "id": 2,
+      //     "name": "VIP座位",
+      //     "x": 240,
+      //     "y": 210,
+      //     "width": 120,
+      //     "height": 100,
+      //     "rotate": 0,
+      //     "color": "#428bca",
+      //     "zIndex": 1
+      //   },
+      //   {
+      //     "id": 3,
+      //     "name": "轮椅区",
+      //     "x": 240,
+      //     "y": 315,
+      //     "width": 150,
+      //     "height": 120,
+      //     "rotate": 0,
+      //     "color": "#5cb85c",
+      //     "zIndex": 1
+      //   }
+      // ]
+      // this.$refs.layout.init(para);
     }
   }
 }
