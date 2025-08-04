@@ -16,17 +16,15 @@ Vue.use(MoveableLayout);
 ```
 2. 页面使用
 ```html
-<MoveableLayout ref="layout" 
+<moveable-layout ref="layout" 
                 :seat-templates="seat" 
                 :stage-size="stageSize" 
-                :save-layout="save">
-</MoveableLayout>
+                :save-layout="save" 
+                :deal-overlap="dealOverlap">
+</moveable-layout>
 <script>
 export default {
     name: 'App',
-    components: {
-        MoveableLayout
-    },
     data() {
         return {
             // 图例部分数据
@@ -67,7 +65,10 @@ export default {
             ]
             // 调用初始化函数
             this.$refs.layout.init(para);
-        }
+        },
+	    dealOverlap() {
+		    alert("dealOverlap");
+	    }
     }
 }
 </script>
