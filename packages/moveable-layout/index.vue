@@ -140,7 +140,7 @@ export default {
     },
     elementGuidelines() {
       if (!this.elementGuidelinesEnabled) return [];
-      return this.$refs.seatElements?.filter((_, i) => i !== this.selectedSeatIndex) || [];
+      return this.$refs.seatElements.filter((_, i) => i !== this.selectedSeatIndex) || [];
     },
     gridStyle() {
       return {
@@ -200,6 +200,19 @@ export default {
     init(seats) {
       this.nextId = seats.reduce((p,v) => p.id < v.id ? v : p).id + 1;
       this.seats = seats;
+    },
+
+    resetLocation(seat, last_x, last_y, last_w = null, last_h = null, last_rotate = null) {
+      if(last_x !== null) seat.x = last_x;
+      if(last_y !== null) seat.y = last_y;
+      if(last_w !== null) seat.width = last_w;
+      if(last_h !== null) seat.height = last_h;
+      if(last_rotate !== null) seat.rotate = last_rotate;
+      this.$nextTick(() => {
+        if (this.$refs.moveable) {
+          this.$refs.moveable.updateRect();
+        }
+      });
     },
 
     // 检查两个旋转后的矩形是否交叉
@@ -267,10 +280,8 @@ export default {
     },
 
     // 处理旋转
-    handleRotate({ rotate }) {
-      const seat = this.seats[this.selectedSeatIndex];
-      if (!seat) return;
-      seat.rotate = rotate;
+    handleRotate(e) {
+      e.target.style.transform = e.drag.transform;
     },
 
     // 确保座位不会超出舞台边界
@@ -283,29 +294,42 @@ export default {
     handleDragEnd(e) {
       // console.log(e,e.lastEvent.translate);
       const seat = this.seats[this.selectedSeatIndex];
+      const last_x = seat.x;
+      const last_y = seat.y;
       seat.x = e.lastEvent.translate[0];
       seat.y = e.lastEvent.translate[1];
       if(this.preventOverlap && this.checkCurrentOverlap()) {
         this.dealOverlap();
+        this.resetLocation(seat, last_x, last_y);
       }
     },
 
     handleResizeEnd(e) {
       // console.log('缩放结束',e);
       const seat = this.seats[this.selectedSeatIndex];
+      const last_x = seat.x;
+      const last_y = seat.y;
+      const last_w = seat.width;
+      const last_h = seat.height;
       seat.x = e.lastEvent.drag.beforeTranslate[0];
       seat.y = e.lastEvent.drag.beforeTranslate[1];
       seat.width = e.lastEvent.width;
       seat.height = e.lastEvent.height;
       if(this.preventOverlap && this.checkCurrentOverlap()) {
         this.dealOverlap();
+        this.resetLocation(seat, last_x, last_y, last_w, last_h);
       }
     },
 
-    handleRotateEnd() {
-      console.log('旋转结束');
+    handleRotateEnd(e) {
+      // console.log('旋转结束', e);
+      const seat = this.seats[this.selectedSeatIndex];
+      const last_rotate = seat.rotate;
+      seat.rotate = e.lastEvent.beforeRotate;
       if(this.preventOverlap && this.checkCurrentOverlap()) {
         this.dealOverlap();
+        console.log(last_rotate)
+        this.resetLocation(seat, null, null, null, null, last_rotate);
       }
     },
 
